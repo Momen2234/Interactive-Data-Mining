@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-PMF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Data Mining & Analytics Course</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']]
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 300px; max-h-[400px]; }
+        @media (min-width: 768px) { .chart-container { height: 350px; } }
+        .sidebar {
+            width: 280px;
+            transition: transform 0.3s ease-in-out;
+        }
+        .content-area {
+            transition: margin-left 0.3s ease-in-out;
+            margin-left: 280px;
+        }
+        .sidebar-closed .sidebar {
+            transform: translateX(-100%);
+        }
+        .sidebar-closed .content-area {
+            margin-left: 0;
+        }
+        .nav-link {
+            display: block;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        .nav-link:hover {
+            background-color: #fde68a; /* amber-200 */
+            color: #78350f; /* amber-800 */
+        }
+        .nav-link.active {
+            background-color: #f59e0b; /* amber-500 */
+            color: white;
+            font-weight: 600;
+        }
+        .interactive-diagram div { border: 1px solid #fbbf24; /* amber-400 */ padding: 8px; margin: 4px; border-radius: 4px; text-align: center; }
+        .interactive-diagram .arrow { margin: 10px 0; font-size: 1.5em; color: #78350f; /* amber-700 */ }
+        .details-toggle { cursor: pointer; color: #0284c7; /* sky-600 */ text-decoration: underline; margin-top: 5px; }
+        .details-content { display: none; margin-top: 10px; padding: 10px; border: 1px solid #fde68a; /* amber-200 */ border-radius: 5px; background-color: #fffbeb; /* amber-50 */ }
+        h2 { font-size: 1.75rem; color: #92400e; /* amber-700 */ margin-bottom: 1rem; margin-top:1.5rem; border-bottom: 2px solid #fcd34d; /* amber-300 */ padding-bottom: 0.5rem;}
+        h3 { font-size: 1.4rem; color: #a16207; /* amber-600 */ margin-bottom: 0.75rem; margin-top:1.25rem; }
+        h4 { font-size: 1.15rem; color: #b45309; /* amber-700 */ margin-bottom: 0.5rem; margin-top:1rem; }
+        p, li { color: #3f3f46; /* neutral-700 */ line-height: 1.6; }
+        ul { list-style-type: disc; margin-left: 20px; }
+        code { background-color: #f3f4f6; /* gray-100 */ padding: 2px 4px; border-radius: 4px; font-family: monospace; color: #c026d3 /* fuchsia-600 */; }
+        .accent-text { color: #0369a1; /* sky-700 */ font-weight: 600; }
+        .info-box { background-color: #e0f2fe; /* sky-100 */ border-left: 4px solid #0ea5e9; /* sky-500 */ padding: 1rem; margin-bottom: 1rem; border-radius: 0.25rem; }
+        .hierarchy-item {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s;
+        }
+        .hierarchy-item:hover {
+            background-color: #fef3c7; /* amber-100 */
+        }
+        .hierarchy-icon {
+            display: inline-block;
+            width: 1em; /* For alignment */
+            margin-right: 0.25rem;
+            color: #0ea5e9; /* sky-500 */
+        }
+    </style>
+</head>
+<body class="bg-amber-50 text-neutral-800">
+
+    <div id="app-container" class="flex min-h-screen">
+        <aside id="sidebar" class="sidebar bg-amber-100 text-amber-800 p-4 fixed top-0 left-0 h-full overflow-y-auto shadow-lg">
+            <h1 class="text-2xl font-bold text-amber-700 mb-6 border-b-2 border-amber-300 pb-2">Data Mining & Analytics</h1>
+            <nav>
+                <ul>
+                    <li><a href="#module1" class="nav-link active" data-tab="module1">Module 1: Foundations</a></li>
+                    <li><a href="#module2" class="nav-link" data-tab="module2">Module 2: Cluster Analysis</a></li>
+                    <li><a href="#module3" class="nav-link" data-tab="module3">Module 3: Fuzzy Logic & Clustering</a></li>
+                    <li><a href="#module4" class="nav-link" data-tab="module4">Module 4: Genetic Algorithms</a></li>
+                    <li><a href="#module5" class="nav-link" data-tab="module5">Module 5: Data Warehousing & OLAP</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main id="content-area" class="content-area flex-1 p-6 md:p-10">
+            <button id="sidebar-toggle" class="fixed top-4 right-4 z-50 p-2 bg-amber-500 text-white rounded-md md:hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                </svg>
+            </button>
+
+            <div id="module1" class="tab-content active">
+                <section>
+                    <div class="prose max-w-none">
+                        <p class="text-lg text-neutral-600 mb-6">This module introduces the fundamental concepts of data mining and data science, explaining why they are crucial in today's data-driven world. You'll learn about the Knowledge Discovery Process (KDD) and different learning paradigms.</p>
+
+                        <h2>1.1 What is Data Mining?</h2>
+                        <p>Data mining is the process of searching for and discovering relationships and global patterns that are "hidden" within large databases. These relationships reveal valuable knowledge about the data and the entities it describes. Think of it as sifting through a mountain of data to find precious nuggets of information. An alternative and closely related term is <span class="accent-text">Knowledge Discovery in Databases (KDD)</span>.</p>
+                        <h4>Why is Data Mining Important?</h4>
+                        <p>We are currently experiencing an explosive growth of data, moving from terabytes to petabytes. This abundance comes from various sources:</p>
+                        <ul>
+                            <li><strong>Business:</strong> E-commerce transactions, web data, stock market information.</li>
+                            <li><strong>Science:</strong> Bioinformatics, remote sensing, scientific simulations.</li>
+                            <li><strong>Society:</strong> News articles, digital photographs, and everyday digital interactions.</li>
+                        </ul>
+                        <p>The challenge is that we are "drowning in data, but starving for knowledge!" Data mining provides the tools for automated analysis of these massive datasets, as "necessity is the mother of invention."</p>
+
+                        <h2>1.2 The Knowledge Discovery Process (KDD)</h2>
+                        <p>Data mining is a core step in a broader process known as Knowledge Discovery. This process involves several stages (hover over steps for a brief description):</p>
+                        <div class="interactive-diagram flex flex-col md:flex-row justify-around items-center my-4 p-4 bg-amber-100 rounded-lg">
+                            <div title="Removing noise and inconsistent data.">1. Data Cleaning</div>
+                            <div class="arrow md:hidden">&#x2193;</div> <div class="arrow hidden md:block">&#x2192;</div>
+                            <div title="Combining data from multiple sources.">2. Data Integration</div>
+                            <div class="arrow md:hidden">&#x2193;</div> <div class="arrow hidden md:block">&#x2192;</div>
+                            <div title="Retrieving data relevant to the analysis task.">3. Data Selection</div>
+                            <div class="arrow md:hidden">&#x2193;</div> <div class="arrow hidden md:block">&#x2192;</div>
+                            <div title="Converting data into a form suitable for mining.">4. Data Transformation</div>
+                            <div class="arrow md:hidden">&#x2193;</div> <div class="arrow hidden md:block">&#x2192;</div>
+                            <div title="Applying intelligent methods to extract data patterns.">5. Data Mining</div>
+                            <div class="arrow md:hidden">&#x2193;</div> <div class="arrow hidden md:block">&#x2192;</div>
+                            <div title="Identifying genuinely interesting patterns.">6. Pattern Evaluation</div>
+                            <div class="arrow md:hidden">&#x2193;</div> <div class="arrow hidden md:block">&#x2192;</div>
+                            <div title="Presenting the mined knowledge to the user.">7. Knowledge Presentation</div>
+                        </div>
+                        <p>The first four steps are often considered forms of data preprocessing. A typical data mining system architecture includes components like a database/data warehouse, a server, a data mining engine, a pattern evaluation model, and a user interface.</p>
+
+                        <h2>1.3 What is Data Science?</h2>
+                        <p>Data Science is an interdisciplinary field that uses scientific methods, processes, algorithms, and systems to extract knowledge and insights from data in various forms. More specifically, it's defined as "the science which uses computer science, statistics and machine learning, visualization and human-computer interactions to collect, clean, integrate, analyze, visualize, interact with data to create data products."</p>
+                        <h4>Relationship between Data Science and Data Mining:</h4>
+                        <ul>
+                            <li>Data science is an "umbrella" term encompassing several techniques for extracting information and insights from data.</li>
+                            <li>Data mining is considered a part of data science.</li>
+                            <li>Key related areas include Artificial Intelligence (AI), Machine Learning (ML), and computer science.</li>
+                        </ul>
+
+                        <h2>1.4 Data Mining: On What Kinds of Data?</h2>
+                        <p>Data mining techniques can be applied to a wide variety of data sources, including: Relational databases, Data warehouses, Transactional databases, Advanced databases and information repositories, Spatial and temporal data, Time-series data, Stream data, Multimedia databases, Text databases and the World Wide Web (WWW).</p>
+                        <h4>When is Data Mining Helpful?</h4>
+                        <p>Consider these questions:</p>
+                        <ul>
+                            <li>Can the problem be clearly defined?</li>
+                            <li>Does potentially meaningful data exist?</li>
+                            <li>Do the data contain hidden knowledge, or are they only useful for reporting?</li>
+                            <li>Will the cost of processing the data be less than the potential profit from applying the gained knowledge?</li>
+                        </ul>
+
+                        <h2>1.5 Levels and Methods of Learning</h2>
+                        <h4>Four Levels of Learning:</h4>
+                        <ol>
+                            <li><strong>Facts:</strong> Simple statements of truth.</li>
+                            <li><strong>Concepts:</strong> Sets of objects, symbols, or events grouped by common characteristics.</li>
+                            <li><strong>Procedures:</strong> Step-by-step actions to achieve a goal.</li>
+                            <li><strong>Principles:</strong> General truths or laws basic to other truths.</li>
+                        </ol>
+                        <h4>Methods of Learning:</h4>
+                        <ul>
+                            <li><strong>Supervised Learning:</strong> Models are developed using <span class="accent-text">labeled data</span> (i.e., data where the outcome or class is already known). These models are then used to identify objects with similar structures and determine their outcomes. Classification is a common example.</li>
+                            <li><strong>Unsupervised Learning:</strong> Models are built from data <span class="accent-text">without predefined classes</span>. This method finds similarities between objects based on their attributes and groups them into clusters. It's considered "learning by observation" because class label information is not present.</li>
+                        </ul>
+                        <p>Data mining tasks can be broadly categorized as: Predictive (Classification, Regression, etc.) and Descriptive (Clustering, Association Rules, etc.).</p>
+                    </div>
+                </section>
+            </div>
+
+            <div id="module2" class="tab-content">
+                <section>
+                    <div class="prose max-w-none">
+                        <p class="text-lg text-neutral-600 mb-6">This module focuses on Cluster Analysis, a key unsupervised learning technique for discovering natural groupings in data. You will explore different clustering methods like K-Medoids and Hierarchical Clustering.</p>
+
+                        <h2>2.1 What is Clustering?</h2>
+                        <p>Clustering is the process of grouping a set of data objects into multiple groups or <span class="accent-text">clusters</span>. The key idea is that objects <em>within</em> a cluster should have high similarity to each other, while being very <em>dissimilar</em> to objects in other clusters. Similarities and dissimilarities are assessed based on the attribute values describing the objects, often involving distance measures.</p>
+
+                        <h2>2.2 What is Cluster Analysis?</h2>
+                        <p>Cluster analysis (also known as data segmentation) is a method often used for exploratory data analysis. It is an <span class="accent-text">unsupervised learning</span> technique because there is no predefined class label information. It's essentially "learning by observation."</p>
+                        <h4>Difference between Clustering and Classification:</h4>
+                        <div class="grid md:grid-cols-2 gap-4 my-4">
+                            <div class="p-4 border border-amber-300 rounded-lg bg-amber-100">
+                                <h4 class="text-amber-700">Clustering (Unsupervised)</h4>
+                                <ul>
+                                    <li>Tries to group objects and find relationships.</li>
+                                    <li>Number of classes often unknown beforehand.</li>
+                                    <li>No prior knowledge/training set.</li>
+                                    <li>Used to explore and understand data.</li>
+                                </ul>
+                            </div>
+                            <div class="p-4 border border-sky-300 rounded-lg bg-sky-50">
+                                <h4 class="text-sky-700">Classification (Supervised)</h4>
+                                <ul>
+                                    <li>Starts with predefined classes.</li>
+                                    <li>Assigns new objects to these classes.</li>
+                                    <li>Based on a labeled training set.</li>
+                                    <li>Used to classify future observations.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <h2>2.3 Types of Clustering Methods</h2>
+                        <p>Major approaches include Partitioning Methods (e.g., K-Medoids) and Hierarchical Clustering. Advanced methods include Fuzzy clustering, Density-based clustering, and Model-based clustering.</p>
+
+                        <h3>2.3.1 Partitioning Method: K-Medoids</h3>
+                        <p>The k-medoids algorithm picks actual objects (<span class="accent-text">medoids</span>) to represent cluster centers. It's more robust to outliers than k-means.</p>
+                        <p class="details-toggle" onclick="toggleDetails('kmedoids-example')">Show K-Medoids Algorithm Steps & Example Details ▼</p>
+                        <div id="kmedoids-example" class="details-content">
+                            <h4>K-Medoids Algorithm Steps (PAM):</h4>
+                            <ol>
+                                <li><strong>Initialization:</strong> Select 'k' objects as initial medoids.</li>
+                                <li><strong>Assignment:</strong> Assign each object to the cluster with the nearest medoid.</li>
+                                <li><strong>Update Medoids (Swapping):</strong> Iteratively try to swap a medoid with a non-medoid object if the swap reduces the total cost (sum of dissimilarities).</li>
+                                <li><strong>Repeat:</strong> Steps 2 and 3 until medoids no longer change.</li>
+                            </ol>
+                            <h4>Example of K-Medoids Cost Calculation (Conceptual from Lec. 3):</h4>
+                            <p>Given data and initial medoids $c_1=(3,4), c_2=(7,4)$. Cost is Manhattan distance: $cost(x,c) = \sum |x_i - c_i|$.</p>
+                            <p>For $X_1=(2,6)$: $cost(X_1, c_1)=3$, $cost(X_1, c_2)=7$. $X_1$ assigned to $c_1$. Initial total cost = 20.</p>
+                            <p>Try swapping $c_2$ with non-medoid $O'=(7,3)$. New medoids $c_1=(3,4), O'=(7,3)$. New total cost = 22.</p>
+                            <p>Since $22 - 20 = 2 > 0$, the swap is bad. Revert.</p>
+                            <h4>K-Means vs. K-Medoids:</h4>
+                            <ul>
+                                <li>K-Medoids is more robust to noise and outliers.</li>
+                                <li>K-Medoids is computationally more costly.</li>
+                                <li>Both require 'k' to be specified.</li>
+                            </ul>
+                        </div>
+
+                        <h3>2.3.2 Hierarchical Clustering</h3>
+                        <p>Groups data into a tree of clusters (dendrogram). <span class="accent-text">Agglomerative</span> (bottom-up) starts with singletons and merges. <span class="accent-text">Divisive</span> (top-down) starts with one cluster and splits.</p>
+                         <p class="details-toggle" onclick="toggleDetails('hierarchical-example')">Show Agglomerative Hierarchical Clustering Algorithm & Example ▼</p>
+                        <div id="hierarchical-example" class="details-content">
+                            <h4>Agglomerative Hierarchical Clustering Steps:</h4>
+                            <ol>
+                                <li><strong>Initialization:</strong> Each object is a cluster.</li>
+                                <li><strong>Compute Merging Cost:</strong> Find the two closest clusters. Distance measures include:
+                                    <ul>
+                                        <li><strong>Single-Linkage (MIN):</strong> Shortest distance between any two points in the two clusters.</li>
+                                        <li><strong>Complete-Linkage (MAX):</strong> Longest distance.</li>
+                                        <li><strong>Average-Linkage:</strong> Average distance.</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Remove & Merge:</strong> Remove the pair from the list and merge them into a new cluster. Add the new cluster to the list.</li>
+                                <li><strong>Repeat:</strong> Until one cluster remains.</li>
+                            </ol>
+                            <h4>Example of Agglomerative Hierarchical Clustering (Single-Linkage from Lec.4):</h4>
+                            <p>Data points A, B, C, D, E, F. Distances calculated (e.g., $d_{DF}=0.5$).</p>
+                            <ol>
+                                <li>Merge D, F at distance 0.5. Cluster (D,F).</li>
+                                <li>Update distance matrix. (e.g., $d_{(D,F) \to A} = \min(d_{DA}, d_{FA}) = 3.20$)</li>
+                                <li>Merge A, B at distance 0.71. Cluster (A,B).</li>
+                                <li>Update. Smallest is $d_{(D,F) \to E} = 1.00$. Merge (D,F), E. Cluster ((D,F),E).</li>
+                                <li>Update. Smallest is $d_{((D,F),E) \to C} = 1.41$. Merge ((D,F),E), C. Cluster (((D,F),E),C).</li>
+                                <li>Update. Merge (((D,F),E),C), (A,B) at distance 2.50.</li>
+                            </ol>
+                            <p>The dendrogram shows this merge sequence. (A conceptual dendrogram is shown below).</p>
+                        </div>
+                        <h4>Conceptual Dendrogram (Hierarchical Clustering Example)</h4>
+                        <div class="chart-container my-4 p-2 border border-amber-300 rounded-lg">
+                            <canvas id="dendrogramChart"></canvas>
+                        </div>
+                        <p>Advantages: Great for visualization, provides hierarchical relations. Disadvantages: Not easy to define levels, can be outperformed by other methods.</p>
+                    </div>
+                </section>
+            </div>
+
+            <div id="module3" class="tab-content">
+                <section>
+                    <div class="prose max-w-none">
+                         <p class="text-lg text-neutral-600 mb-6">This module delves into Fuzzy Clustering, where objects can belong to multiple clusters with varying degrees, and introduces the underlying principles of Fuzzy Logic and Fuzzy Inference Systems (FIS).</p>
+
+                        <h2>3.1 Hard vs. Soft (Fuzzy) Clustering</h2>
+                        <ul>
+                            <li><strong>Hard Clustering:</strong> Each object belongs to exactly one cluster (e.g., K-Means).</li>
+                            <li><strong>Soft (Fuzzy) Clustering:</strong> Objects can belong to multiple clusters with degrees of membership. Useful for ambiguous boundaries.</li>
+                        </ul>
+
+                        <h2>3.2 Fuzzy Logic</h2>
+                        <p>Fuzzy logic, introduced by Dr. Lotfi Zadeh, handles "degrees of truth" rather than strict true/false. It models uncertainty in natural language.</p>
+                        <h4>3.2.1 Crisp Sets vs. Fuzzy Sets</h4>
+                        <p>A <span class="accent-text">crisp set</span> has sharp boundaries (member or not). A <span class="accent-text">fuzzy set</span> allows partial membership. Example: "tall men" can have varying degrees of membership based on height.</p>
+                        <h4>3.2.2 Membership Functions (MF)</h4>
+                        <p>An MF maps input points to a membership value (0 to 1). Common shapes: Triangular, Trapezoidal, Gaussian. Below are conceptual representations of Triangular and Trapezoidal MFs for a variable like "Temperature".</p>
+                        <div class="grid md:grid-cols-2 gap-4 my-4">
+                            <div class="chart-container p-2 border border-amber-300 rounded-lg">
+                                <canvas id="triangularMfChart"></canvas>
+                                <p class="text-center text-sm mt-1">Conceptual Triangular MFs (e.g., Cold, Medium, Hot)</p>
+                            </div>
+                            <div class="chart-container p-2 border border-amber-300 rounded-lg">
+                                <canvas id="trapezoidalMfChart"></canvas>
+                                <p class="text-center text-sm mt-1">Conceptual Trapezoidal MFs (e.g., Cold, Medium, Hot)</p>
+                            </div>
+                        </div>
+                        <h4>3.2.3 Fuzzy Logical Operations</h4>
+                        <p><code>AND</code> (min), <code>OR</code> (max), <code>NOT</code> (1 - membership).</p>
+
+                        <h2>3.3 Fuzzy Inference System (FIS)</h2>
+                        <p>An FIS maps inputs to outputs using fuzzy logic. It involves fuzzy if-then rules.</p>
+                        <h4>3.3.2 Structure of a Fuzzy Expert System / FIS</h4>
+                        <div class="interactive-diagram flex flex-col items-center my-4 p-4 bg-amber-100 rounded-lg">
+                            <div>Crisp Input</div>
+                            <div class="arrow">&#x2193;</div>
+                            <div title="Convert crisp inputs to fuzzy membership degrees.">1. Fuzzification Interface</div>
+                            <div class="arrow">&#x2193;</div>
+                            <div title="Contains Rule Base (if-then rules) and Database (MF definitions).">2. Knowledge Base</div>
+                            <div class="arrow md:hidden">&#x2193;</div>
+                            <div class="flex flex-row items-center">
+                                <div class="arrow hidden md:block md:rotate-90">&#x2193;</div>
+                                <div title="Applies fuzzy inputs to rules to get fuzzy outputs.">3. Inference Engine</div>
+                                <div class="arrow hidden md:block md:-rotate-90">&#x2193;</div>
+                            </div>
+                             <div class="arrow md:hidden">&#x2193;</div>
+                            <div title="Convert aggregated fuzzy output to a crisp value.">4. Defuzzification Interface</div>
+                            <div class="arrow">&#x2193;</div>
+                            <div>Crisp Output</div>
+                        </div>
+
+                        <h4>3.3.3 Fuzzy Inferencing Process (Steps)</h4>
+                        <ol>
+                            <li><strong>Fuzzification:</strong> Convert crisp inputs to fuzzy membership degrees using MFs.</li>
+                            <li><strong>Rule Evaluation:</strong>
+                                <ul>
+                                    <li>Evaluate rule antecedents (using fuzzy AND/OR).</li>
+                                    <li>Apply implication (e.g., clipping) to shape consequent fuzzy sets.</li>
+                                </ul>
+                            </li>
+                            <li><strong>Aggregation:</strong> Combine outputs of all fired rules into a single fuzzy set per output variable (often using max).</li>
+                            <li><strong>Defuzzification:</strong> Convert aggregated fuzzy output to a crisp value (e.g., Centroid of Area - COG).</li>
+                        </ol>
+
+                        <h4>3.3.4 Example: Tipping Problem (Conceptual Interaction)</h4>
+                        <p>Rules: (1) IF service is poor OR food is bad THEN tip is cheap. (2) IF service is good THEN tip is average. (3) IF service is excellent OR food is delicious THEN tip is generous.</p>
+                        <div class="my-4 p-4 border border-amber-300 rounded-lg bg-amber-100">
+                            <label for="serviceQuality">Service Quality (0-10): </label><input type="number" id="serviceQuality" min="0" max="10" value="3" class="border p-1 rounded">
+                            <label for="foodQuality" class="ml-4">Food Quality (0-10): </label><input type="number" id="foodQuality" min="0" max="10" value="8" class="border p-1 rounded">
+                            <button onclick="tippingExample()" class="bg-sky-500 hover:bg-sky-600 text-white py-1 px-3 rounded ml-2">Evaluate Tip Concept</button>
+                            <div id="tipResult" class="mt-2 text-amber-700 font-semibold"></div>
+                        </div>
+
+                        <h4>3.4 Detailed Example: Fuzzy Controller for Home Sprinkler System (Conceptual)</h4>
+                        <p>Goal: Determine watering duration based on Air Temperature and Soil Moisture.</p>
+                         <p class="details-toggle" onclick="toggleDetails('sprinkler-example')">Show Sprinkler System Example Details ▼</p>
+                        <div id="sprinkler-example" class="details-content">
+                            <p>Inputs: Air Temp (Cold, Cool, Normal, Warm, Hot), Soil Moisture (Dry, Moist, Wet).</p>
+                            <p>Output: Watering Duration (Short, Medium, Long).</p>
+                            <p>Sample Rules:</p>
+                            <ul>
+                                <li>IF Temp is Hot AND Soil is Dry THEN Duration is Long.</li>
+                                <li>IF Temp is Warm AND Soil is Moist THEN Duration is Medium.</li>
+                            </ul>
+                            <p>Scenario: Temp = 92F, Moisture = 11%.</p>
+                            <ol>
+                                <li>Fuzzification: Temp=92F $\rightarrow$ $\mu_{Warm}(92)=0.20, \mu_{Hot}(92)=0.46$. Moisture=11% $\rightarrow$ $\mu_{Dry}(11)=0.25, \mu_{Moist}(11)=0.75$.</li>
+                                <li>Rule Evaluation (Strengths):
+                                    <ul>
+                                    <li>R1 (Hot, Dry $\rightarrow$ Long): $\min(0.46, 0.25) = 0.25$.</li>
+                                    <li>R2 (Warm, Moist $\rightarrow$ Medium): $\min(0.20, 0.75) = 0.20$.</li>
+                                    <li>R3 (Warm, Dry $\rightarrow$ Long): $\min(0.20, 0.25) = 0.20$.</li>
+                                    <li>R4 (Hot, Moist $\rightarrow$ Medium): $\min(0.46, 0.75) = 0.46$.</li>
+                                    </ul>
+                                </li>
+                                <li>Aggregation: Output for Long clipped at $\max(0.25, 0.20) = 0.25$. Output for Medium clipped at $\max(0.20, 0.46)=0.46$.</li>
+                                <li>Defuzzification (COG): For the aggregated shape, balance point found at (e.g.) 38 minutes.</li>
+                            </ol>
+                            <p>Conceptual visual of Aggregated Output for Defuzzification:</p>
+                            <div class="chart-container my-4 p-2 border border-amber-300 rounded-lg">
+                                <canvas id="defuzzChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div id="module4" class="tab-content">
+                <section>
+                    <div class="prose max-w-none">
+                        <p class="text-lg text-neutral-600 mb-6">This module introduces Genetic Algorithms (GAs), powerful search and optimization techniques inspired by natural evolution. Learn about their mechanisms, operators, and applications.</p>
+
+                        <h2>4.1 What Are Genetic Algorithms (GAs)?</h2>
+                        <p>GAs are machine-learning techniques that mimic biological evolution. They are search and optimization algorithms based on <span class="accent-text">Darwin's Principle of Natural Selection</span>: "Select The Best, Discard The Rest." GAs refine a population of candidate solutions (chromosomes) to find optimal or near-optimal solutions.</p>
+
+                        <h2>4.3 GA Working Mechanism</h2>
+                        <div class="interactive-diagram flex flex-col items-center my-4 p-4 bg-amber-100 rounded-lg">
+                            <div>Begin</div>
+                            <div class="arrow">&#x2193;</div>
+                            <div title="Create initial random solutions.">Initialize Population</div>
+                            <div class="arrow">&#x2193;</div>
+                            <div title="Assess solution quality.">Evaluate Solutions (Fitness Function)</div>
+                            <div class="arrow">&#x2193;</div>
+                            <div title="Stop if optimal or max generations reached.">Termination Condition?</div>
+                            <div class="flex flex-row justify-around w-full">
+                                <div><span class="arrow">&#x2190;</span> (No) Next Generation</div> <div class="ml-4">(Yes) <span class="arrow">&#x2192;</span> Stop</div>
+                            </div>
+                            <div class="arrow rotate-90 md:rotate-0">&#x2190; (Loop)</div>
+                            <div class="grid grid-cols-3 gap-2 w-full mt-2">
+                                <div title="Select fittest parents.">Selection</div>
+                                <div class="arrow hidden md:block">&#x2192;</div><div class="arrow md:hidden">&#x2193;</div>
+                                <div title="Combine parents' genes.">Crossover</div>
+                                 <div class="arrow hidden md:block">&#x2192;</div><div class="arrow md:hidden">&#x2193;</div>
+                                <div title="Introduce random changes.">Mutation</div>
+                            </div>
+                        </div>
+
+                        <h2>4.4 GA Structure and Operators</h2>
+                        <ul>
+                            <li><strong>Chromosome:</strong> A candidate solution (string of genes).</li>
+                            <li><strong>Gene:</strong> Basic unit of information.</li>
+                            <li><strong>Population:</strong> Set of chromosomes.</li>
+                            <li><strong>Genetic Operators:</strong>
+                                <ul>
+                                    <li><strong>Selection:</strong> Fitter individuals chosen to reproduce.</li>
+                                    <li><strong>Crossover:</strong> Combines parts of two parent chromosomes.</li>
+                                    <li><strong>Mutation:</strong> Randomly alters genes to maintain diversity.</li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                        <h2>4.5 GA Requirements</h2>
+                        <ol>
+                            <li><strong>Genetic Representation (Encoding):</strong> How a solution is encoded (e.g., bit strings, real numbers, permutations).</li>
+                            <li><strong>Fitness Function:</strong> Measures the quality of a solution. Problem-dependent.</li>
+                        </ol>
+
+                        <h2>4.7 Example: Guessing a Secret Number (Conceptual Step-Through)</h2>
+                        <p>Problem: Guess secret binary <code>001010</code>. Fitness: Number of correct digits.</p>
+                        <div id="ga-example" class="my-4 p-4 border border-amber-300 rounded-lg bg-amber-100">
+                            <div id="ga-generation-display" class="mb-2">Generation 0 displayed.</div>
+                            <button onclick="prevGeneration()" class="bg-sky-500 hover:bg-sky-600 text-white py-1 px-3 rounded mr-2">Previous Gen</button>
+                            <button onclick="nextGeneration()" class="bg-sky-500 hover:bg-sky-600 text-white py-1 px-3 rounded">Next Gen</button>
+                            <div id="ga-output" class="mt-3 whitespace-pre-wrap font-mono text-sm"></div>
+                        </div>
+                        <p>Limitations: No guarantee of optimality, parameter tuning needed, can be computationally intensive.</p>
+                    </div>
+                </section>
+            </div>
+
+            <div id="module5" class="tab-content">
+                <section>
+                    <div class="prose max-w-none">
+                        <p class="text-lg text-neutral-600 mb-6">This module covers Data Warehousing concepts, architectures (including ETL), and Online Analytical Processing (OLAP) for multidimensional data analysis and decision support.</p>
+
+                        <h2>5.2 What is a Data Warehouse (DW)?</h2>
+                        <p>A DW is a <span class="accent-text">subject-oriented, integrated, time-variant, and nonvolatile</span> collection of data supporting management's decision-making. It's a historical decision support database separate from operational databases.</p>
+
+                        <h2>5.4 Characteristics of a Data Warehouse</h2>
+                        <ol>
+                            <li><strong>Subject-Oriented:</strong> Organized around subjects (customer, product).</li>
+                            <li><strong>Integrated:</strong> Data from multiple sources is made consistent.</li>
+                            <li><strong>Time-Variant:</strong> Provides a historical perspective (5-10 years).</li>
+                            <li><strong>Nonvolatile:</strong> Data is read-only once loaded; updates are periodic additions.</li>
+                        </ol>
+
+                        <h2>5.6 Data Warehouse Schema</h2>
+                        <p>DWs use multidimensional models. Common schemas:</p>
+                        <ul>
+                            <li><strong>Star Schema:</strong> Central Fact Table with measures, surrounded by Dimension Tables with descriptive attributes. Simple, efficient.</li>
+                            <li><strong>Snowflake Schema:</strong> Dimension tables are normalized. Reduces redundancy but more joins.</li>
+                            <li><strong>Fact Constellation (Galaxy):</strong> Multiple fact tables share dimension tables.</li>
+                        </ul>
+                        <p class="details-toggle" onclick="toggleDetails('schema-diagrams')">Show Conceptual Schema Diagrams ▼</p>
+                        <div id="schema-diagrams" class="details-content">
+                            <h4 class="text-center">Conceptual Star Schema</h4>
+                            <div class="interactive-diagram flex flex-col items-center p-2 my-2">
+                                <div class="bg-sky-200 p-2 rounded">Dimension: Product</div>
+                                <div class="flex flex-row items-center">
+                                    <div class="bg-sky-200 p-2 rounded">Dimension: Time</div>
+                                    <div class="arrow mx-2">&#x2194;</div>
+                                    <div class="bg-amber-300 p-4 rounded font-bold">Fact Table: Sales</div>
+                                    <div class="arrow mx-2">&#x2194;</div>
+                                    <div class="bg-sky-200 p-2 rounded">Dimension: Store</div>
+                                </div>
+                                <div class="bg-sky-200 p-2 rounded">Dimension: Location</div>
+                            </div>
+                             <h4 class="text-center mt-4">Conceptual Snowflake Schema (Product Dimension)</h4>
+                            <div class="interactive-diagram flex flex-col items-center p-2 my-2">
+                                <div class="bg-sky-200 p-2 rounded">Brand</div>
+                                 <div class="arrow">&#x2191;</div>
+                                <div class="bg-sky-300 p-2 rounded">Product Detail</div>
+                                <div class="arrow">&#x2193;</div>
+                                <div class="bg-sky-200 p-2 rounded">Supplier</div>
+                                <p class="text-xs mt-1">(Product Detail links to Fact Table)</p>
+                            </div>
+                        </div>
+
+
+                        <h2>5.7.2 The ETL Process (Extract, Transform, Load)</h2>
+                        <p>ETL is critical for populating the DW:</p>
+                        <div class="interactive-diagram grid grid-cols-1 md:grid-cols-5 gap-2 items-center my-4 p-4 bg-amber-100 rounded-lg">
+                            <div title="Gather data from sources.">1. Extract</div>
+                            <div class="arrow md:hidden">&#x2193;</div><div class="arrow hidden md:block">&#x2192;</div>
+                            <div title="Clean, standardize, integrate.">2. Transform</div>
+                            <div class="arrow md:hidden">&#x2193;</div><div class="arrow hidden md:block">&#x2192;</div>
+                            <div title="Load into DW.">3. Load</div>
+                            <div class="arrow md:hidden">&#x2193;</div><div class="arrow hidden md:block">&#x2192;</div>
+                            <div title="Propagate updates.">4. Refresh</div>
+                            <div class="col-span-1 md:col-span-5 text-center mt-2 text-sm">(Data Warehouse)</div>
+                        </div>
+
+
+                        <h2>5.8 Data Warehouse Modeling: Data Cube and OLAP</h2>
+                        <h4>5.8.1 Data Cube: A Multidimensional Data Model</h4>
+                        <p>Data is viewed in multiple dimensions (e.g., product, time, region) with measures (e.g., sales volume). Dimensions often have hierarchies.</p>
+
+                        <h4>5.8.2 Online Analytical Processing (OLAP)</h4>
+                        <p>OLAP tools allow users to analyze DW data interactively. The hierarchy below demonstrates the concept of drilling down (expanding) and rolling up (collapsing) through location data.</p>
+                        <p class="mt-2 mb-1 text-sm text-neutral-500">Click items with <span class="hierarchy-icon font-bold text-sky-600">►</span> to expand (Drill-Down) or <span class="hierarchy-icon font-bold text-sky-600">▼</span> to collapse (Roll-Up).</p>
+                        <div class="my-4 p-4 border border-amber-300 rounded-lg bg-amber-100">
+                            <h4 class="text-amber-700">Interactive Location Hierarchy:</h4>
+                            <ul id="location-hierarchy" class="list-none p-0 mt-2">
+                                </ul>
+                            <h4 class="text-amber-700 mt-4">Conceptual 3D Cube Operations:</h4>
+                            <div class="flex space-x-2 mt-2">
+                                <button onclick="olapOperation('slice')" class="bg-sky-500 hover:bg-sky-600 text-white py-1 px-2 rounded text-sm">Slice (e.g., Time = Q1)</button>
+                                <button onclick="olapOperation('dice')" class="bg-sky-500 hover:bg-sky-600 text-white py-1 px-2 rounded text-sm">Dice (e.g., Product=X, Location=Y)</button>
+                                <button onclick="olapOperation('pivot')" class="bg-sky-500 hover:bg-sky-600 text-white py-1 px-2 rounded text-sm">Pivot (Rotate View)</button>
+                            </div>
+                            <div id="olap-cube-display" class="mt-3 p-3 border border-dashed border-amber-400 h-32 flex items-center justify-center text-neutral-500">
+                                Conceptual Cube Area - Click an operation
+                            </div>
+                        </div>
+
+                        <h2>5.9 OLTP vs. OLAP</h2>
+                        <p>OLTP systems manage day-to-day operations (current data, updates, relational). OLAP systems support decision-making (historical data, analysis, multidimensional).</p>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+<script>
+    const navLinks = document.querySelectorAll('.nav-link');
+    const tabContents = document.querySelectorAll('.tab-content');
+    const sidebar = document.getElementById('sidebar');
+    const contentArea = document.getElementById('content-area');
+    const appContainer = document.getElementById('app-container');
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+
+    function typesetMath(element) {
+        if (typeof MathJax !== "undefined" && typeof MathJax.typesetPromise === "function") {
+            MathJax.typesetPromise(element ? [element] : undefined).catch(function (err) { 
+                // console.error('MathJax typesetPromise failed:', err); 
+            });
+        }
+    }
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetTab = e.target.dataset.tab;
+
+            navLinks.forEach(nl => nl.classList.remove('active'));
+            e.target.classList.add('active');
+
+            tabContents.forEach(tc => {
+                tc.classList.remove('active');
+                if (tc.id === targetTab) {
+                    tc.classList.add('active');
+                    typesetMath(tc);
+                }
+            });
+            // On mobile, close sidebar after navigation
+            if (window.innerWidth < 768) {
+                appContainer.classList.add('sidebar-closed');
+            }
+        });
+    });
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        const activeTab = document.querySelector('.tab-content.active');
+        if (activeTab) {
+           typesetMath(activeTab);
+        }
+         // Initialize OLAP Hierarchy
+        const initialHierarchyRoot = document.getElementById('location-hierarchy');
+        if (initialHierarchyRoot) {
+            const rootLi = document.createElement('li');
+            rootLi.dataset.level = "0";
+            rootLi.className = 'hierarchy-item font-bold cursor-pointer hover:text-sky-600';
+            const rootIcon = document.createElement('span');
+            rootIcon.className = 'hierarchy-icon';
+            rootIcon.innerHTML = '►'; // '►' for expandable
+            rootLi.appendChild(rootIcon);
+            rootLi.appendChild(document.createTextNode(" All Locations"));
+            
+            const subUl = document.createElement('ul');
+            subUl.className = 'list-none p-0 hidden'; // Initially hidden
+            buildHierarchy(subUl, hierarchyData["All Locations"], 1);
+            rootLi.appendChild(subUl);
+
+            rootLi.addEventListener('click', (e) => {
+                e.stopPropagation();
+                subUl.classList.toggle('hidden');
+                rootIcon.innerHTML = subUl.classList.contains('hidden') ? '►' : '▼';
+            });
+            initialHierarchyRoot.appendChild(rootLi);
+        }
+
+    });
+
+
+    sidebarToggle.addEventListener('click', () => {
+        appContainer.classList.toggle('sidebar-closed');
+    });
+    
+    window.addEventListener('resize', () => {
+        if (window.innerWidth >= 768) {
+            appContainer.classList.remove('sidebar-closed');
+        } else {
+             appContainer.classList.add('sidebar-closed');
+        }
+    });
+     if (window.innerWidth < 768) {
+        appContainer.classList.add('sidebar-closed');
+    }
+
+
+    function toggleDetails(elementId) {
+        const content = document.getElementById(elementId);
+        const toggleButton = document.querySelector(`.details-toggle[onclick="toggleDetails('${elementId}')"]`);
+        if (content.style.display === 'none' || content.style.display === '') {
+            content.style.display = 'block';
+            toggleButton.textContent = toggleButton.textContent.replace('▼', '▲');
+            typesetMath(content);
+        } else {
+            content.style.display = 'none';
+            toggleButton.textContent = toggleButton.textContent.replace('▲', '▼');
+        }
+    }
+
+    // Chart.js Dendrogram Example (Conceptual for Hierarchical Clustering)
+    const dendrogramCtx = document.getElementById('dendrogramChart')?.getContext('2d');
+    if (dendrogramCtx) {
+        new Chart(dendrogramCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Merge D,F', 'Merge A,B', 'Merge (D,F),E', 'Merge ((D,F),E),C', 'Final Merge'],
+                datasets: [{
+                    label: 'Merge Distance (Lifetime)',
+                    data: [0.50, 0.71, 1.00, 1.41, 2.50],
+                    backgroundColor: 'rgba(245, 158, 11, 0.6)', // amber-500 with opacity
+                    borderColor: 'rgba(180, 83, 9, 1)', // amber-700
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: 'Distance' } },
+                    x: { title: { display: true, text: 'Merge Step' } }
+                },
+                plugins: {
+                    title: { display: true, text: 'Conceptual Dendrogram Merge Distances' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) { label += ': '; }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y.toFixed(2);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Chart.js Membership Function Examples
+    function createMfChart(canvasId, chartTitle, mfData) {
+        const ctx = document.getElementById(canvasId)?.getContext('2d');
+        if (!ctx) return;
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Array.from({length: 11}, (_, i) => i * 10), // Example X-axis 0-100
+                datasets: mfData.map(mf => ({
+                    label: mf.label,
+                    data: mf.data,
+                    borderColor: mf.color,
+                    fill: false,
+                    tension: 0.1
+                }))
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: { y: { min:0, max: 1, title: {display: true, text: 'Membership Degree (μ)'}}, x: {title: {display: true, text: 'Input Variable Value'}}},
+                plugins: { title: {display: true, text: chartTitle}}
+            }
+        });
+    }
+
+    createMfChart('triangularMfChart', 'Conceptual Triangular MFs', [
+        { label: 'Cold', data: [1,0.5,0,0,0,0,0,0,0,0,0].map((v,i) => i<3 ? (1 - i/2) : 0), color: 'blue' },
+        { label: 'Medium', data: [0,0,0.5,1,0.5,0,0,0,0,0,0].map((v,i) => (i>1 && i<5) ? ( (i<=3) ? (i-1.5)/1.5 : (4.5-i)/1.5 ) : 0), color: 'green' },
+        { label: 'Hot', data: [0,0,0,0,0,0,0,0.5,1,0.5,0].map((v,i) => (i>6 && i<10) ? ( (i<=8) ? (i-6.5)/1.5 : (9.5-i)/1.5 ) : 0), color: 'red' }
+    ]);
+    createMfChart('trapezoidalMfChart', 'Conceptual Trapezoidal MFs', [
+        { label: 'Slow', data: [1,1,0.5,0,0,0,0,0,0,0,0].map((v,i) => i<2 ? 1 : (i===2 ? 0.5 : 0)), color: 'purple' },
+        { label: 'Moderate', data: [0,0,0.5,1,1,0.5,0,0,0,0,0].map((v,i) => (i>1 && i<6) ? ( (i===2 || i===5) ? 0.5 : (i>2 && i<5 ? 1: 0) ) : 0 ), color: 'orange' },
+        { label: 'Fast', data: [0,0,0,0,0,0.5,1,1,1,0.5,0].map((v,i) => (i>4 && i<10) ? ( (i===5 || i===9) ? 0.5 : (i>5 && i<9 ? 1:0) ) : 0 ), color: 'teal' }
+    ]);
+
+    // Fuzzy Tipping Example
+    function tippingExample() {
+        const service = parseFloat(document.getElementById('serviceQuality').value);
+        const food = parseFloat(document.getElementById('foodQuality').value);
+        const resultDiv = document.getElementById('tipResult');
+        let conceptualTip = "Average";
+        let firedRules = [];
+
+        // Simplified fuzzy logic (conceptual)
+        if (service <= 4 || food <= 4) { // Rule 1: Poor service OR bad food
+            conceptualTip = "Cheap";
+            firedRules.push("Rule 1 (Poor/Bad -> Cheap)");
+        }
+        if (service >= 5 && service <= 7.5) { // Rule 2: Good service
+            if (conceptualTip === "Cheap" && Math.random() < 0.5) { /* cheap might override */ }
+            else { conceptualTip = "Average"; }
+             firedRules.push("Rule 2 (Good -> Average)");
+        }
+        if (service > 7.5 || food > 7.5) { // Rule 3: Excellent service OR delicious food
+            conceptualTip = "Generous";
+             firedRules.push("Rule 3 (Excellent/Delicious -> Generous)");
+        }
+        
+        resultDiv.innerHTML = `Conceptual Tip: <span class="text-lg font-bold">${conceptualTip}</span>. <br><small>Fired Rules (Conceptual): ${firedRules.join(', ')}</small>`;
+    }
+
+    // Fuzzy Sprinkler Defuzzification Chart Example (Conceptual)
+    const defuzzCtx = document.getElementById('defuzzChart')?.getContext('2d');
+    if(defuzzCtx) {
+        new Chart(defuzzCtx, {
+            type: 'line',
+            data: {
+                labels: [0, 10, 20, 30, 40, 50, 60], // Watering duration
+                datasets: [
+                    {
+                        label: 'Aggregated "Medium" (clipped at 0.46)',
+                        data: [0, 0.2, 0.46, 0.46, 0.46, 0.2, 0], // Example shape for Medium MF
+                        borderColor: 'rgba(34, 197, 94, 0.8)', // green-500
+                        backgroundColor: 'rgba(34, 197, 94, 0.3)',
+                        fill: 'origin',
+                        tension: 0.1,
+                        stepped: false,
+                    },
+                    {
+                        label: 'Aggregated "Long" (clipped at 0.25)',
+                        data: [0, 0, 0, 0.1, 0.25, 0.25, 0.1], // Example shape for Long MF
+                        borderColor: 'rgba(239, 68, 68, 0.8)', // red-500
+                        backgroundColor: 'rgba(239, 68, 68, 0.3)',
+                        fill: 'origin',
+                        tension: 0.1,
+                        stepped: false,
+                    },
+                     {
+                        label: 'Center of Gravity (COG) = 38 min',
+                        data: [{x:38, y:0}, {x:38, y:0.46}],
+                        borderColor: 'rgba(124, 58, 237, 1)', // violet-600
+                        borderDash: [5,5],
+                        type: 'line',
+                        fill: false,
+                        pointRadius: [0,5],
+                        pointBackgroundColor: 'rgba(124, 58, 237, 1)'
+                    }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: { y: { min:0, max: 1, title: {display: true, text: 'Aggregated Membership'}}, x: {title: {display: true, text: 'Watering Duration (minutes)'}}},
+                plugins: { title: {display: true, text: 'Conceptual Defuzzification (COG Method)'}, legend: { position: 'bottom' } }
+            }
+        });
+    }
+
+
+    // Genetic Algorithm Example
+    const gaGenerations = [
+        { gen: 0, solutions: ["(A) 110100 (score=1)", "(B) 111101 (score=1)", "(C) 011011 (score=4)", "(D) 101100 (score=3)"], selected: ["(C)","(D)"], offspring: ["(E) 011100 (score=3)","(F) 101011 (score=4)","(G) 011000 (score=4)","(H) 101111 (score=3)"]},
+        { gen: 1, solutions: ["(E) 011100 (score=3)", "(F) 101011 (score=4)", "(G) 011000 (score=4)", "(H) 101111 (score=3)"], selected: ["(F)","(G)"], offspring: ["(I) 111000 (score=3)","(J) 001011 (score=5)","(K) 101000 (score=4)","(L) 011011 (score=4)"]},
+        { gen: 2, solutions: ["(I) 111000 (score=3)", "(J) 001011 (score=5)", "(K) 101000 (score=4)", "(L) 011011 (score=4)"], selected: ["(J)","(K)"], offspring: ["(M) 001010 (score=6) - Solution!", "(N) 101001 (score=3)"]},
+        { gen: 3, solutions: ["(M) 001010 (score=6) - Solution!"], selected: [], offspring: []}
+    ];
+    let currentGaGeneration = 0;
+    const gaOutputDiv = document.getElementById('ga-output');
+    const gaGenDisplayDiv = document.getElementById('ga-generation-display');
+
+    function displayGaGeneration(genIndex) {
+        const data = gaGenerations[genIndex];
+        gaGenDisplayDiv.textContent = `Generation ${data.gen} (Target: 001010):`;
+        let htmlContent = `<strong>Current Population:</strong><br>${data.solutions.join('<br>')}<br><br>`;
+        if(data.selected.length > 0) {
+            htmlContent += `<strong>Selected Parents:</strong> ${data.selected.join(', ')}<br>`;
+            htmlContent += `<strong>Offspring (after Crossover/Mutation):</strong><br>${data.offspring.join('<br>')}`;
+        }
+        if(data.solutions[0].includes("Solution!")) {
+            htmlContent += "<br><br><strong class='text-green-600'>Solution Found!</strong>";
+        }
+        gaOutputDiv.innerHTML = htmlContent; // Use innerHTML to parse HTML tags
+    }
+    function nextGeneration() {
+        if (currentGaGeneration < gaGenerations.length - 1) {
+            currentGaGeneration++;
+            displayGaGeneration(currentGaGeneration);
+        }
+    }
+    function prevGeneration() {
+        if (currentGaGeneration > 0) {
+            currentGaGeneration--;
+            displayGaGeneration(currentGaGeneration);
+        }
+    }
+    if(gaOutputDiv) displayGaGeneration(0); // Initial display
+
+
+    // OLAP Location Hierarchy Example
+    const hierarchyData = {
+        "All Locations": { // This key itself is not used in buildHierarchy, the data starts from its children
+            "North America": { "USA": {"New York": {}, "Chicago": {}}, "Canada": {"Toronto": {}, "Vancouver": {}} },
+            "Europe": { "Germany": {"Frankfurt": {}}, "Spain": {"Madrid": {}} }
+        }
+    };
+
+    function buildHierarchy(parentElement, data, level) {
+        for (const key in data) {
+            const li = document.createElement('li');
+            li.style.marginLeft = level * 15 + 'px'; // Adjusted indentation
+            li.dataset.level = level;
+            const hasChildren = Object.keys(data[key]).length > 0;
+            
+            const iconSpan = document.createElement('span');
+            iconSpan.className = 'hierarchy-icon';
+            iconSpan.innerHTML = hasChildren ? '►' : '&nbsp;&nbsp;'; // Right arrow or space for alignment
+            
+            li.className = 'hierarchy-item cursor-pointer py-1';
+            li.appendChild(iconSpan);
+            li.appendChild(document.createTextNode(` ${key}`)); // Add space after icon
+            
+            if (hasChildren) {
+                const subUl = document.createElement('ul');
+                subUl.className = 'list-none p-0 hidden'; // Initially hidden
+                buildHierarchy(subUl, data[key], level + 1);
+                li.appendChild(subUl);
+                li.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent event bubbling to parent LIs
+                    subUl.classList.toggle('hidden');
+                    iconSpan.innerHTML = subUl.classList.contains('hidden') ? '►' : '▼';
+                });
+            }
+            parentElement.appendChild(li);
+        }
+    }
+    
+    // OLAP Cube Operations (Conceptual)
+    const olapCubeDisplay = document.getElementById('olap-cube-display');
+    function olapOperation(opType) {
+        if(!olapCubeDisplay) return;
+        let content = `Conceptual 3D Cube View - Operation: <strong class="text-amber-700">${opType.toUpperCase()}</strong><br>`;
+        switch(opType) {
+            case 'slice':
+                content += 'Showing a 2D slice (e.g., sales for Q1 across all products and locations).';
+                olapCubeDisplay.innerHTML = content + '<div class="w-full h-full bg-sky-100 border-2 border-sky-300 flex items-center justify-center">Slice: Q1 Data</div>';
+                break;
+            case 'dice':
+                content += 'Showing a sub-cube (e.g., sales for Product X in Location Y for Q1-Q2).';
+                 olapCubeDisplay.innerHTML = content + '<div class="w-3/4 h-3/4 bg-green-100 border-2 border-green-300 flex items-center justify-center">Dice: Product X, Loc Y, Q1-Q2</div>';
+                break;
+            case 'pivot':
+                content += 'Rotated view (e.g., locations become columns, time becomes rows).';
+                olapCubeDisplay.innerHTML = content + '<div class="w-full h-full bg-purple-100 border-2 border-purple-300 flex items-center justify-center">Pivot: View Rotated</div>';
+                break;
+        }
+    }
+
+</script>
+</body>
+</html>
