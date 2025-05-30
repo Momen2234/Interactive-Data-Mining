@@ -19,12 +19,22 @@
     </script>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <!-- Visualization & Content Choices:
+        - Module 1 (Foundations): Text, lists. KDD Process as HTML/CSS diagram. Added Data Warehousing summary. Goal: Inform.
+        - Module 2 (Clustering): Text, lists. K-Medoids example with toggleable details. Hierarchical Clustering dendrogram now drawn using custom HTML Canvas for better accuracy, based on Lec. 4, pg 18. Goal: Explain, Illustrate. Interaction: Toggle details, view dendrogram.
+        - Module 3 (Fuzzy Logic): Text, lists. FIS process as HTML/CSS diagram. Tipping/Sprinkler examples with interactive HTML elements. Membership Functions (MFs) as Chart.js line charts. Goal: Explain, Demonstrate. Interaction: Click to see rule logic, view MF charts.
+        - Module 4 (Genetic Algorithms): Text, lists. GA mechanism as HTML/CSS diagram. Secret Number example as a step-through display. Goal: Explain, Demonstrate. Interaction: Step through GA example generations.
+        - Module 5 (Data Warehousing/OLAP): Text, lists. Schemas (Star, Snowflake) as HTML/CSS diagrams. ETL as HTML/CSS diagram. OLAP operations (Roll-up/Drill-down, Slice/Dice) with interactive HTML/CSS elements. Goal: Explain, Demonstrate Concepts. Interaction: Click through hierarchies, trigger conceptual cube views.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
     <style>
         body { font-family: 'Inter', sans-serif; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 300px; max-h-[400px]; }
         @media (min-width: 768px) { .chart-container { height: 350px; } }
+        #dendrogramCanvasContainer { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 350px; max-h-[450px]; border: 1px solid #e5e7eb; /* gray-200 */ } /* Specific height for dendrogram */
+
         .sidebar {
             width: 280px;
             transition: transform 0.3s ease-in-out;
@@ -108,7 +118,7 @@
             <div id="module1" class="tab-content active">
                 <section>
                     <div class="prose max-w-none">
-                        <p class="text-lg text-neutral-600 mb-6">This module introduces the fundamental concepts of data mining and data science, explaining why they are crucial in today's data-driven world. You'll learn about the Knowledge Discovery Process (KDD) and different learning paradigms.</p>
+                        <p class="text-lg text-neutral-600 mb-6">This module introduces the fundamental concepts of data mining and data science, explaining why they are crucial in today's data-driven world. You'll learn about the Knowledge Discovery Process (KDD), different learning paradigms, and an introduction to data warehousing.</p>
 
                         <h2>1.1 What is Data Mining?</h2>
                         <p>Data mining is the process of searching for and discovering relationships and global patterns that are "hidden" within large databases. These relationships reveal valuable knowledge about the data and the entities it describes. Think of it as sifting through a mountain of data to find precious nuggets of information. An alternative and closely related term is <span class="accent-text">Knowledge Discovery in Databases (KDD)</span>.</p>
@@ -174,6 +184,24 @@
                             <li><strong>Unsupervised Learning:</strong> Models are built from data <span class="accent-text">without predefined classes</span>. This method finds similarities between objects based on their attributes and groups them into clusters. It's considered "learning by observation" because class label information is not present.</li>
                         </ul>
                         <p>Data mining tasks can be broadly categorized as: Predictive (Classification, Regression, etc.) and Descriptive (Clustering, Association Rules, etc.).</p>
+                        
+                        <h2>1.6 Introduction to Data Warehousing</h2>
+                        <p>A <span class="accent-text">Data Warehouse (DW)</span> is a foundational concept often linked with data mining. It serves as a central repository for data that has been collected from various sources and transformed for analytical purposes.</p>
+                        <h4>What is a Data Warehouse?</h4>
+                        <ul>
+                            <li>According to Bill Inmon, a data warehouse is "a single, complete and consistent store of data obtained from a variety of different sources made available to end users in a way they can understand and use in a business context."</li>
+                            <li>More formally, it's defined as a <span class="accent-text">subject-oriented, integrated, time-variant, and nonvolatile</span> collection of data designed to support management's decision-making process.</li>
+                        </ul>
+                        <h4>What is Data Warehousing?</h4>
+                        <p>Data warehousing is the entire process of data extraction, transformation, and loading (ETL) of data into the warehouse, and the subsequent access of this data by end-users and applications for analysis and decision support. It's a collection of data created to support decision-making applications.</p>
+                        <h4>Data Mining vs. Data Warehousing:</h4>
+                        <p>While related, they are distinct:</p>
+                        <ul>
+                            <li><strong>Data Warehousing</strong> is about extracting data from different sources, cleaning it, and storing it in a structured way in the warehouse for analysis. It provides the infrastructure.</li>
+                            <li><strong>Data Mining</strong> is a method for analyzing large amounts of data (often stored in a data warehouse) to find patterns, build models, and make forecasts. It's an analytical technique applied to the data.</li>
+                        </ul>
+                        <p>A data warehouse is often a key source of data for data mining activities.</p>
+
                     </div>
                 </section>
             </div>
@@ -266,9 +294,9 @@
                             </ol>
                             <p>The dendrogram shows this merge sequence. (A conceptual dendrogram is shown below).</p>
                         </div>
-                        <h4>Conceptual Dendrogram (Hierarchical Clustering Example)</h4>
-                        <div class="chart-container my-4 p-2 border border-amber-300 rounded-lg">
-                            <canvas id="dendrogramChart"></canvas>
+                        <h4>Conceptual Dendrogram (Hierarchical Clustering Example from Lec. 4, pg 18)</h4>
+                        <div id="dendrogramCanvasContainer" class="my-4 p-2 border border-amber-300 rounded-lg bg-white">
+                            <canvas id="customDendrogramCanvas"></canvas>
                         </div>
                         <p>Advantages: Great for visualization, provides hierarchical relations. Disadvantages: Not easy to define levels, can be outperformed by other methods.</p>
                     </div>
@@ -567,6 +595,9 @@
                 if (tc.id === targetTab) {
                     tc.classList.add('active');
                     typesetMath(tc);
+                     if (targetTab === 'module2') { // Specifically redraw dendrogram when Module 2 is active
+                        drawCustomDendrogram();
+                    }
                 }
             });
             // On mobile, close sidebar after navigation
@@ -580,6 +611,9 @@
         const activeTab = document.querySelector('.tab-content.active');
         if (activeTab) {
            typesetMath(activeTab);
+           if (activeTab.id === 'module2') {
+                drawCustomDendrogram();
+           }
         }
          // Initialize OLAP Hierarchy
         const initialHierarchyRoot = document.getElementById('location-hierarchy');
@@ -619,6 +653,9 @@
         } else {
              appContainer.classList.add('sidebar-closed');
         }
+        if (document.getElementById('module2').classList.contains('active')) { // Redraw if visible
+            drawCustomDendrogram();
+        }
     });
      if (window.innerWidth < 768) {
         appContainer.classList.add('sidebar-closed');
@@ -637,47 +674,124 @@
             toggleButton.textContent = toggleButton.textContent.replace('▲', '▼');
         }
     }
+    
+    function drawCustomDendrogram() {
+        const canvas = document.getElementById('customDendrogramCanvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const container = document.getElementById('dendrogramCanvasContainer');
+        
+        canvas.width = container.offsetWidth;
+        canvas.height = container.offsetHeight;
 
-    // Chart.js Dendrogram Example (Conceptual for Hierarchical Clustering)
-    const dendrogramCtx = document.getElementById('dendrogramChart')?.getContext('2d');
-    if (dendrogramCtx) {
-        new Chart(dendrogramCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Merge D,F', 'Merge A,B', 'Merge (D,F),E', 'Merge ((D,F),E),C', 'Final Merge'],
-                datasets: [{
-                    label: 'Merge Distance (Lifetime)',
-                    data: [0.50, 0.71, 1.00, 1.41, 2.50],
-                    backgroundColor: 'rgba(245, 158, 11, 0.6)', // amber-500 with opacity
-                    borderColor: 'rgba(180, 83, 9, 1)', // amber-700
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: { beginAtZero: true, title: { display: true, text: 'Distance' } },
-                    x: { title: { display: true, text: 'Merge Step' } }
-                },
-                plugins: {
-                    title: { display: true, text: 'Conceptual Dendrogram Merge Distances' },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) { label += ': '; }
-                                if (context.parsed.y !== null) {
-                                    label += context.parsed.y.toFixed(2);
-                                }
-                                return label;
-                            }
-                        }
-                    }
-                }
-            }
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#78350f'; // amber-800
+        ctx.fillStyle = '#78350f';
+        ctx.lineWidth = 1.5;
+        ctx.font = '12px Inter, sans-serif';
+        ctx.textAlign = 'center';
+
+        const objects = ['D', 'F', 'E', 'C', 'A', 'B'];
+        const numObjects = objects.length;
+        const padding = 40;
+        const chartWidth = canvas.width - 2 * padding;
+        const chartHeight = canvas.height - 2 * padding - 20; // Extra 20 for labels
+        const maxDistance = 2.5;
+
+        const objSpacing = chartWidth / (numObjects -1);
+        const yPos = (dist) => canvas.height - padding - 20 - (dist / maxDistance * chartHeight);
+
+        // Object positions
+        const objXPos = {};
+        objects.forEach((obj, i) => {
+            const x = padding + i * objSpacing;
+            objXPos[obj] = x;
+            ctx.fillText(obj, x, canvas.height - padding + 5);
+            ctx.beginPath();
+            ctx.moveTo(x, canvas.height - padding - 20);
+            ctx.lineTo(x, yPos(0)); // Line from object up to baseline
+            ctx.stroke();
         });
+        
+        // Y-axis (Lifetime/Distance)
+        ctx.beginPath();
+        ctx.moveTo(padding -10 , padding);
+        ctx.lineTo(padding -10, canvas.height - padding - 20);
+        ctx.stroke();
+        const ticks = [0, 0.5, 1.0, 1.5, 2.0, 2.5];
+        ctx.textAlign = 'right';
+        ticks.forEach(tick => {
+            const y = yPos(tick);
+            ctx.fillText(tick.toFixed(1), padding - 15, y + 4);
+            ctx.beginPath();
+            ctx.moveTo(padding - 12, y);
+            ctx.lineTo(padding - 8, y);
+            ctx.stroke();
+        });
+        ctx.save();
+        ctx.translate(padding - 30, canvas.height / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.textAlign = 'center';
+        ctx.fillText('Lifetime (Distance)', 0, 0);
+        ctx.restore();
+        ctx.textAlign = 'center';
+
+
+        // Merge 1: D and F at 0.5
+        const yDF = yPos(0.5);
+        const xDF_mid = (objXPos['D'] + objXPos['F']) / 2;
+        ctx.beginPath();
+        ctx.moveTo(objXPos['D'], yPos(0)); ctx.lineTo(objXPos['D'], yDF); // D up to merge
+        ctx.moveTo(objXPos['F'], yPos(0)); ctx.lineTo(objXPos['F'], yDF); // F up to merge
+        ctx.moveTo(objXPos['D'], yDF); ctx.lineTo(objXPos['F'], yDF);     // Horizontal merge line
+        ctx.moveTo(xDF_mid, yDF); ctx.lineTo(xDF_mid, yPos(0)); // Line from merge up (conceptually)
+        ctx.stroke();
+        objXPos['(D,F)'] = xDF_mid; // Store merged x position
+
+        // Merge 2: A and B at 0.71
+        const yAB = yPos(0.71);
+        const xAB_mid = (objXPos['A'] + objXPos['B']) / 2;
+        ctx.beginPath();
+        ctx.moveTo(objXPos['A'], yPos(0)); ctx.lineTo(objXPos['A'], yAB);
+        ctx.moveTo(objXPos['B'], yPos(0)); ctx.lineTo(objXPos['B'], yAB);
+        ctx.moveTo(objXPos['A'], yAB); ctx.lineTo(objXPos['B'], yAB);
+        ctx.moveTo(xAB_mid, yAB); ctx.lineTo(xAB_mid, yPos(0));
+        ctx.stroke();
+        objXPos['(A,B)'] = xAB_mid;
+
+        // Merge 3: (D,F) and E at 1.0
+        const yDFE = yPos(1.0);
+        const xDFE_mid = (objXPos['(D,F)'] + objXPos['E']) / 2;
+        ctx.beginPath();
+        ctx.moveTo(objXPos['(D,F)'], yDF); ctx.lineTo(objXPos['(D,F)'], yDFE); // (D,F) up
+        ctx.moveTo(objXPos['E'], yPos(0)); ctx.lineTo(objXPos['E'], yDFE);   // E up
+        ctx.moveTo(objXPos['(D,F)'], yDFE); ctx.lineTo(objXPos['E'], yDFE); // Horizontal
+        ctx.moveTo(xDFE_mid, yDFE); ctx.lineTo(xDFE_mid, yPos(0));
+        ctx.stroke();
+        objXPos['((D,F),E)'] = xDFE_mid;
+
+        // Merge 4: ((D,F),E) and C at 1.41
+        const yDFEC = yPos(1.41);
+        const xDFEC_mid = (objXPos['((D,F),E)'] + objXPos['C']) / 2;
+        ctx.beginPath();
+        ctx.moveTo(objXPos['((D,F),E)'], yDFE); ctx.lineTo(objXPos['((D,F),E)'], yDFEC);
+        ctx.moveTo(objXPos['C'], yPos(0)); ctx.lineTo(objXPos['C'], yDFEC);
+        ctx.moveTo(objXPos['((D,F),E)'], yDFEC); ctx.lineTo(objXPos['C'], yDFEC);
+        ctx.moveTo(xDFEC_mid, yDFEC); ctx.lineTo(xDFEC_mid, yPos(0));
+        ctx.stroke();
+        objXPos['(((D,F),E),C)'] = xDFEC_mid;
+        
+        // Merge 5: (((D,F),E),C) and (A,B) at 2.5
+        const yFinal = yPos(2.5);
+        const xFinal_mid = (objXPos['(((D,F),E),C)'] + objXPos['(A,B)']) / 2;
+        ctx.beginPath();
+        ctx.moveTo(objXPos['(((D,F),E),C)'], yDFEC); ctx.lineTo(objXPos['(((D,F),E),C)'], yFinal);
+        ctx.moveTo(objXPos['(A,B)'], yAB); ctx.lineTo(objXPos['(A,B)'], yFinal);
+        ctx.moveTo(objXPos['(((D,F),E),C)'], yFinal); ctx.lineTo(objXPos['(A,B)'], yFinal);
+        // No line up from final merge
+        ctx.stroke();
     }
+
 
     // Chart.js Membership Function Examples
     function createMfChart(canvasId, chartTitle, mfData) {
